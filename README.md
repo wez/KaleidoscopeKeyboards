@@ -26,3 +26,19 @@ is the entry point for the overall keyboard firmware.
 ```
 ./make.py iota --flash
 ```
+
+## Adding a new keyboard
+
+Make a new subdirectory and model it after the `iota` directory.
+
+The `info.py` file defines arduino parameters for the board, as
+well as the USB product and vendor ID information.
+
+The `hw` directory should be an arduino library that implements
+the keyboard matrix and scanner implementation.
+
+The `keymap` directory holds the main keymap sketch; this is
+where you will edit the key layout and macros.
+
+You can then use `./make.py YOURNAME` to build your keyboard,
+assuming that you named the directory `YOURNAME`.
