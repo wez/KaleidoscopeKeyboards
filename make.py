@@ -16,6 +16,7 @@ parser.add_argument('keyboard', help='which keyboard to build')
 parser.add_argument('--clean', help='remove build products', action='store_true')
 parser.add_argument('--flash', help='flash the device', action='store_true')
 parser.add_argument('--verbose', help='verbose build', action='store_true')
+parser.add_argument('--sync', help='perform submodule sync', action='store_true')
 
 args = parser.parse_args()
 
@@ -133,6 +134,10 @@ def load_keyboard(name):
 
 kbd = load_keyboard(args.keyboard)
 kbd.set_dir(os.path.realpath(args.keyboard))
+
+if args.sync:
+    subprocess.check_call(['git', 'submodule', 'sync', '--recursive'])
+    subprocess.check_call(['git', 'submodule', 'update', '--init', '--recursive'])
 
 if args.clean:
     kbd.clean()
