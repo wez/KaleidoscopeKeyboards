@@ -27,7 +27,7 @@ enum mcp23017_registers {
   OutputLatchB = 0x15,
 };
 
-static bool set_reg(enum mcp23017_registers reg, uint8_t val) {
+static void set_reg(enum mcp23017_registers reg, uint8_t val) {
   Wire.beginTransmission(i2cAddress);
   Wire.write(uint8_t(reg));
   Wire.write(val);
