@@ -1,8 +1,8 @@
 keyboard(
-    name='iota-nrf52',
+    name='one-key-nrf52',
     fqbn='adafruit:nrf52:feather52:debug=l0',
     vid='0xFEED',
     pid='0x6006',
-    product='iota',
+    product='one-key-nrf52',
     manufacturer='Wez Furlong',
 )
