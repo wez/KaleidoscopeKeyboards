@@ -224,6 +224,8 @@ class keyboard(object):
                     '-Wno-unused-parameter',
                     '-Wno-unused-variable',
                     '-Wno-ignored-qualifiers',
+                    '\'-DKBD_MANUFACTURER="%s"\'' % self.manufacturer,
+                    '\'-DKBD_PRODUCT="%s"\'' % self.product,
                     ]),
                 'build.extra_flags': ' '.join([
                     '-DKALEIDOSCOPE_HARDWARE_H="%s-hardware.h"' % self.name,
