@@ -3,7 +3,9 @@ import os
 import sys
 import subprocess
 import argparse
+import re
 import shutil
+import shlex
 from glob import glob
 import time
 from pprint import pprint
@@ -57,10 +59,62 @@ class Arduino(object):
                     result[cols[0]] = cols[1]
         return result
 
+def resolve_pref(prefs, key):
+    ''' Evaluate a pref value, expanding interpolated keys '''
+    value = prefs[key]
+    r = re.compile('\\{([a-zA-Z0-9_._]+)\\}')
+
+    path = []
+    for ele in key.split('.'):
+        if path:
+            path.append('%s.%s' % (path[-1], ele))
+        else:
+            path.append(ele)
+
+    while True:
+        before = value
+
+        m = r.search(value)
+        if not m:
+            return value
+
+        key = m.group(1)
+        if key not in prefs:
+            # search configuration path
+            key = None
+            for ele in path:
+                k = '%s.%s' % (ele, m.group(1))
+                if k in prefs:
+                    key = k
+                    break
+            if not key:
+                raise Exception('could not resolve prefs from %s' % value)
+
+        value = value.replace(m.group(0), prefs[key])
+
+        if value == before:
+            break
+    return value
+
+
+    while '{' in value:
+        # this is a dumb loop; could be made faster by parsing the
+        # string and looking up the keys, rather than iterating
+        # over all of them.
+        before = value
+        for k, v in prefs.items():
+            s = '{%s}' % k
+            value = value.replace(s, v)
+
+        if value == before:
+            # stop if we didn't change anything
+            break
+
+    return value
+
+
 arduino = Arduino()
 #pprint(arduino.prefs)
-
-AVRDUDE = '/Applications/Arduino.app/Contents/Java/hardware/tools/avr/bin/avrdude'
 
 class keyboard(object):
     def __init__(self,
@@ -69,11 +123,9 @@ class keyboard(object):
                  vid=None,
                  pid=None,
                  product=None,
-                 mcu=None,
                  manufacturer=None):
         self.name = name
         self.fqbn = fqbn
-        self.mcu = mcu
         self.vid = vid
         self.pid = pid
         self.product = product
@@ -152,23 +204,30 @@ class keyboard(object):
 
     def build(self):
         build_path = self.make_dirs()
-        cmd = self._builder('-compile', prefs={
-            'build.pid': self.pid,
-            'build.vid': self.vid,
-            'build.usb_manufacturer': '"%s"' % self.manufacturer,
-            'build.usb_product': '"%s"' % self.product,
+
+        if args.verbose:
+            print('Builder prefs reported as:')
+            pprint(self.parse_prefs())
+
+        cmd = self._builder(
+            '-compile',
+            prefs={
+                'build.pid': self.pid,
+                'build.vid': self.vid,
+                'build.usb_manufacturer': '"%s"' % self.manufacturer,
+                'build.usb_product': '"%s"' % self.product,
             },
             prefs_extend={
-            'compiler.cpp.extra_flags': ' '.join([
-             #   '-std=c++11', adafruit libs are not C++11 clean
-                '-Woverloaded-virtual',
-                '-Wno-unused-parameter',
-                '-Wno-unused-variable',
-                '-Wno-ignored-qualifiers',
-                ]),
-            'build.extra_flags': ' '.join([
-                '-DKALEIDOSCOPE_HARDWARE_H="%s-hardware.h"' % self.name,
-                ])
+                'compiler.cpp.extra_flags': ' '.join([
+                    # '-std=c++11', adafruit libs are not C++11 clean
+                    '-Woverloaded-virtual',
+                    '-Wno-unused-parameter',
+                    '-Wno-unused-variable',
+                    '-Wno-ignored-qualifiers',
+                    ]),
+                'build.extra_flags': ' '.join([
+                    '-DKALEIDOSCOPE_HARDWARE_H="%s-hardware.h"' % self.name,
+                    ])
             })
         if args.verbose:
             print('Building using:')
@@ -190,23 +249,54 @@ class keyboard(object):
         if not self.build():
             return False
 
+        prefs = self.parse_prefs()
+
+        if prefs['upload.tool'] == 'arduino:avrdude':
+            self.flash_avrdude(prefs)
+        else:
+            print("I don't know how to flash using %s" % prefs['bootloader.tool'])
+            p = dict(arduino.prefs)
+            p.update(prefs)
+            pprint(p)
+
+    def flash_avrdude(self, prefs):
+
+        p = dict(arduino.prefs)
+        p.update(prefs)
+
+        p['upload.verbose'] = '{tools.avrdude.upload.params.verbose}' \
+                               if args.verbose \
+                               else '{tools.avrdude.upload.params.quiet}'
+
+        p['build.path'] = self.output_dir_name()
+        p['build.project_name'] = '%s.ino' % self.name
+
+        if args.verbose:
+            print('Dict for flashing')
+            pprint(p)
+
+        pref_serial_port = resolve_pref(p, 'serial.port')
+
         while True:
             devices = glob('/dev/cu.usbmodem14*')
             device = None
             if len(devices) == 1:
                 device = devices[0]
-                subprocess.call(['stty', '-f', devices[0], '1200'])
             elif len(devices) > 0:
                 print('Ambiguous set of devices; please reset the appropriate one manually!')
                 pprint(devices)
+                device = pref_serial_port
 
-            hexpath = os.path.join(self.output_dir_name(), '%s.ino.hex' % self.name)
-                
-            cmd = [AVRDUDE, '-v', 
-                    '-C/Applications/Arduino.app/Contents/Java/hardware/tools/avr/etc/avrdude.conf',
-                    '-p%s' % self.mcu, '-cavr109', '-b57600', '-D', "-Uflash:w:%s:i" % hexpath]
             if device:
-                cmd += ['-P', device]
+                p['serial.port'] = device
+
+            if device:
+                # try to persuade the device to jump to the bootloader
+                # (this doesn't seem to work with keyboard firmwares)
+                subprocess.call(['stty', '-f', device, '1200'])
+
+            cmd = resolve_pref(p, 'tools.avrdude.upload.pattern')
+            cmd = shlex.split(cmd)
             pprint(cmd)
 
             time.sleep(1)
