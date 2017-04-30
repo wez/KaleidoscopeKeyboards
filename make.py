@@ -15,7 +15,9 @@ parser = argparse.ArgumentParser(description='''
 parser.add_argument('keyboard', help='which keyboard to build')
 parser.add_argument('--clean', help='remove build products', action='store_true')
 parser.add_argument('--flash', help='flash the device', action='store_true')
+parser.add_argument('--verbose', help='verbose build', action='store_true')
 
+args = parser.parse_args()
 
 AVRDUDE = '/Applications/Arduino.app/Contents/Java/hardware/tools/avr/bin/avrdude'
 
@@ -43,6 +45,9 @@ class keyboard(object):
         def quote(name):
             return name.replace(" ", "_")
 
+        boards = os.path.join('keyboardio', 'Arduino-Boards')
+        libs = os.path.join(boards, 'libraries')
+
         return [
             '/Applications/Arduino.app/Contents/Java/arduino-builder',
             mode,
@@ -53,10 +58,9 @@ class keyboard(object):
             '-fqbn', self.fqbn,
             '-libraries', '/Users/wez/Documents/Arduino/libraries',
             '-libraries', '/Users/wez/Library/Arduino15/packages/..',
-            '-libraries', '/Users/wez/src/kaleidoscope/WezsKeyboards/keyboardio/Kaleidoscope',
-            '-libraries', '/Users/wez/src/kaleidoscope/WezsKeyboards/iota/../keyboardio/Arduino-Boards/libraries',
-            '-hardware', '/Users/wez/src/kaleidoscope/WezsKeyboards/iota/../keyboardio/Arduino-Boards',
-            '-libraries', '/Users/wez/src/kaleidoscope/WezsKeyboards/iota',
+            '-libraries', libs,
+            '-hardware', boards,
+            '-libraries', self.dir,
             '-prefs', 'build.extra_flags=-DKALEIDOSCOPE_HARDWARE_H="{name}-hardware.h" -DUSB_VID={vid} -DUSB_PID={pid} -DUSB_PRODUCT="{product}" -DUSB_MANUFACTURER="{manufacturer}"'.format(name=self.name,
                                              vid=self.vid,
                                              pid=self.pid,
@@ -65,7 +69,7 @@ class keyboard(object):
             '-build-path', self.make_dirs(),
             '-ide-version', '100607',
             '-warnings', 'all',
-            '-verbose',
+            '-verbose' if args.verbose else '-quiet',
             '-prefs', 'compiler.cpp.extra_flags=-std=c++11 -Woverloaded-virtual -Wno-unused-parameter -Wno-unused-variable -Wno-ignored-qualifiers',
             '%s/keymap/%s.ino' % (self.dir, self.name)
             ]
@@ -120,8 +124,6 @@ class keyboard(object):
                 break
             print('(Failed, will retry)')
 
-
-args = parser.parse_args()
 
 def load_keyboard(name):
     filename = os.path.join(name, 'info.py')
