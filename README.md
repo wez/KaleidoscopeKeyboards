@@ -60,12 +60,12 @@ The easiest way is:
 * Inspect the verbose output; you'll likely need to scroll to
   the right to find the command line parameters that are
   being passed.  You're looking for something like this:
-  `-fqbn=teensy:avr:teensyLC:usb=serial,speed=48,opt=osstd,keys=en-us`
+  `-fqbn=teensy:avr:teensyLC:usb=serialhid,speed=48,opt=osstd,keys=en-us`
 * Strip off the `-fqbn=` portion and you have your fqbn parameter
 
 ### Common FQBNs
 
-* `teensy:avr:teensyLC:usb=serial,speed=48,opt=osstd,keys=en-us` - Teensy LC
+* `teensy:avr:teensyLC:usb=serialhid,speed=48,opt=osstd,keys=en-us` - Teensy LC
 * `adafruit:avr:feather32u4` - Adafruit Feather Atmega 32u4
 * `adafruit:nrf52:feather52:debug=l0` - Adafruit Feather nRF52
 

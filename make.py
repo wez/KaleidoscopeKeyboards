@@ -205,9 +205,11 @@ class keyboard(object):
     def build(self):
         build_path = self.make_dirs()
 
+        prefs = self.parse_prefs()
+
         if args.verbose:
             print('Builder prefs reported as:')
-            pprint(self.parse_prefs())
+            pprint(prefs)
 
         cmd = self._builder(
             '-compile',
@@ -216,6 +218,12 @@ class keyboard(object):
                 'build.vid': self.vid,
                 'build.usb_manufacturer': '"%s"' % self.manufacturer,
                 'build.usb_product': '"%s"' % self.product,
+
+                # fixup what looks like a bogus config for teensy
+                'recipe.ar.pattern':
+                    prefs['recipe.ar.pattern'].replace(
+                        '{build.path}/core/{archive_file}',
+                        '{archive_file_path}'),
             },
             prefs_extend={
                 'compiler.cpp.extra_flags': ' '.join([
@@ -227,9 +235,14 @@ class keyboard(object):
                     '\'-DKBD_MANUFACTURER="%s"\'' % self.manufacturer,
                     '\'-DKBD_PRODUCT="%s"\'' % self.product,
                     ]),
+                # AVR and Feather pick up flags from here
                 'build.extra_flags': ' '.join([
                     '-DKALEIDOSCOPE_HARDWARE_H="%s-hardware.h"' % self.name,
-                    ])
+                    ]),
+                # The teensy core picks up flags from here
+                'build.flags.cpp': ' '.join([
+                    '-DKALEIDOSCOPE_HARDWARE_H="%s-hardware.h"' % self.name,
+                    ]),
             })
         if args.verbose:
             print('Building using:')
@@ -264,7 +277,11 @@ class keyboard(object):
             'nrfutil': {
                 'key': 'tools.nrfutil',
                 'port_glob': '/dev/cu.SLAB*',
-            }
+            },
+            'teensyloader': {
+                'key': 'tools.teensyloader',
+                'port_glob': None,
+            },
         }
 
         if tool in params:
@@ -290,14 +307,15 @@ class keyboard(object):
         pref_serial_port = resolve_pref(p, 'serial.port')
 
         while True:
-            devices = glob(params['port_glob'])
             device = None
-            if len(devices) == 1:
-                device = devices[0]
-            elif len(devices) > 0:
-                print('Ambiguous set of devices; please reset the appropriate one manually!')
-                pprint(devices)
-                device = pref_serial_port
+            if params['port_glob']:
+                devices = glob(params['port_glob'])
+                if len(devices) == 1:
+                    device = devices[0]
+                elif len(devices) > 0:
+                    print('Ambiguous set of devices; please reset the appropriate one manually!')
+                    pprint(devices)
+                    device = pref_serial_port
 
             if device:
                 p['serial.port'] = device
