@@ -9,11 +9,20 @@ is the entry point for the overall keyboard firmware.
 
 ## Instructions
 
-* Clone this repo, then:
+* Clone this repo, the first time:
 
 ```
-git submodule sync --recursive
-git submodule update --init --recursive
+./make.py iota --sync
 ```
 
+* Subsequent builds:
 
+```
+./make.py iota
+```
+
+* To flash it:
+
+```
+./make.py iota --flash
+```

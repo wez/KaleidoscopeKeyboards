@@ -87,9 +87,13 @@ class keyboard(object):
     def build(self):
         build_path = self.make_dirs()
         cmd = self._builder('-compile')
+        print('Building using:')
         pprint(cmd)
         result = subprocess.call(cmd)
-        pprint(result)
+        if result != 0:
+            print('Build FAILED!')
+            return False
+        return True
 
     def clean(self):
         path = self.output_dir_name()
@@ -98,7 +102,8 @@ class keyboard(object):
         print('Cleaned %s' % path)
 
     def flash(self):
-        self.build()
+        if not self.build():
+            return False
 
         while True:
             devices = glob('/dev/cu.usbmodem14*')
@@ -142,6 +147,6 @@ if args.sync:
 if args.clean:
     kbd.clean()
 elif args.flash:
-    kbd.flash()
+    sys.exit(0 if kbd.flash() else 1)
 else:
-    kbd.build()
+    sys.exit(0 if kbd.build() else 1)
