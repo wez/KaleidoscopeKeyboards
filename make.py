@@ -250,23 +250,33 @@ class keyboard(object):
             return False
 
         prefs = self.parse_prefs()
-
-        if prefs['upload.tool'] == 'arduino:avrdude':
-            self.flash_avrdude(prefs)
-        else:
-            print("I don't know how to flash using %s" % prefs['bootloader.tool'])
-            p = dict(arduino.prefs)
-            p.update(prefs)
-            pprint(p)
-
-    def flash_avrdude(self, prefs):
-
         p = dict(arduino.prefs)
         p.update(prefs)
+        tool = prefs['upload.tool']
 
-        p['upload.verbose'] = '{tools.avrdude.upload.params.verbose}' \
+        params = {
+            'arduino:avrdude': {
+                'key': 'tools.avrdude',
+                'port_glob': '/dev/cu.*',
+            },
+            'nrfutil': {
+                'key': 'tools.nrfutil',
+                'port_glob': '/dev/cu.SLAB*',
+            }
+        }
+
+        if tool in params:
+            self._flash(params[tool], p)
+        else:
+            pprint(p)
+            print("I don't know how to flash using %s" % tool)
+
+    def _flash(self, params, p):
+        key = params['key']
+
+        p['upload.verbose'] = '{%s.upload.params.verbose}' % key \
                                if args.verbose \
-                               else '{tools.avrdude.upload.params.quiet}'
+                               else '{%s.upload.params.quiet}' % key
 
         p['build.path'] = self.output_dir_name()
         p['build.project_name'] = '%s.ino' % self.name
@@ -278,7 +288,7 @@ class keyboard(object):
         pref_serial_port = resolve_pref(p, 'serial.port')
 
         while True:
-            devices = glob('/dev/cu.usbmodem14*')
+            devices = glob(params['port_glob'])
             device = None
             if len(devices) == 1:
                 device = devices[0]
@@ -292,10 +302,10 @@ class keyboard(object):
 
             if device:
                 # try to persuade the device to jump to the bootloader
-                # (this doesn't seem to work with keyboard firmwares)
+                # (this doesn't seem to work with all hardware)
                 subprocess.call(['stty', '-f', device, '1200'])
 
-            cmd = resolve_pref(p, 'tools.avrdude.upload.pattern')
+            cmd = resolve_pref(p, '%s.upload.pattern' % key)
             cmd = shlex.split(cmd)
             pprint(cmd)
 
