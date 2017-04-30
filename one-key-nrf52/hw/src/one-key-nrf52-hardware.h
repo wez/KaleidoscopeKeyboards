@@ -12,6 +12,8 @@ class OneKeyBLE {
     void scan_matrix();
     void act_on_matrix_scan();
 
+    BLEDis bledis;
+    BLEHidAdafruit blehid;
   private:
     bool pressed_;
     bool wasPressed_;

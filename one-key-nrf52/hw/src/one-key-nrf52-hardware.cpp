@@ -7,8 +7,6 @@
 static const uint8_t row_pins[ROWS] = {2};
 static const uint8_t col_pins[COLS] = {3};
 
-BLEDis bledis;
-BLEHidAdafruit blehid;
 
 #define LED_PIN 17
 
@@ -98,23 +96,10 @@ void OneKeyBLE::scan_matrix() {
 }
 
 void OneKeyBLE::act_on_matrix_scan() {
-  for (uint8_t row = 0; row < ROWS; ++row) {
-    for (uint8_t col = 0; col < COLS; ++col) {
-      uint8_t state = (wasPressed_ ? WAS_PRESSED : 0) |
-                      (pressed_ ? IS_PRESSED : 0);
-      handle_keyswitch_event(Key_NoKey, row, col, state);
+  uint8_t state = (wasPressed_ ? WAS_PRESSED : 0) |
+    (pressed_ ? IS_PRESSED : 0);
 
-      if (!pressed_ && wasPressed_) {
-        if (Bluefruit.connected()) {
-          blehid.keyRelease();
-        }
-      } else if (!wasPressed_ && pressed_) {
-        if (Bluefruit.connected()) {
-          blehid.keyPress(' ');
-        }
-      }
-    }
-  }
+  handle_keyswitch_event(Key_NoKey, 0, 0, state);
 }
 
 HARDWARE_IMPLEMENTATION KeyboardHardware;

@@ -4,7 +4,7 @@
 
 const Key keymaps[][ROWS][COLS] PROGMEM = { 
   {
-    {Key_Space},
+    {Key_X},
   }
 };
 
