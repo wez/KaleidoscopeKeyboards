@@ -124,19 +124,24 @@ static void reboot_bootloader() {
     // happens before the watchdog reboots us
 }
 
+bool is_mac() {
+  // return (HostOS.os() == KaleidoscopePlugins::HostOS::OSX);
+  return true;
+}
+
 const macro_t *macroAction(uint8_t macroIndex, uint8_t keyState) {
   if (!key_toggled_on(keyState)) {
     return MACRO_NONE;
   }
   switch (macroIndex) {
     case MCOPY:
-      if (HostOS.os() == KaleidoscopePlugins::HostOS::OSX) {
+      if (is_mac()) {
         return MACRO(D(LGUI), T(C), U(LGUI), END);
       }
       return MACRO(D(LCtrl), T(Insert), U(LCtrl), END);
 
     case MPASTE:
-      if (HostOS.os() == KaleidoscopePlugins::HostOS::OSX) {
+      if (is_mac()) {
         return MACRO(D(LGUI), T(V), U(LGUI), END);
       }
       return MACRO(D(LShift), T(Insert), U(LShift), END);
