@@ -19,6 +19,7 @@ parser.add_argument('--clean', help='remove build products', action='store_true'
 parser.add_argument('--flash', help='flash the device', action='store_true')
 parser.add_argument('--verbose', help='verbose build', action='store_true')
 parser.add_argument('--sync', help='perform submodule sync', action='store_true')
+parser.add_argument('--port', help='override port for flashing')
 
 args = parser.parse_args()
 
@@ -307,7 +308,10 @@ class keyboard(object):
 
         while True:
             device = None
-            if params['port_glob']:
+
+            if args.port:
+                device = args.port
+            elif params['port_glob']:
                 devices = glob(params['port_glob'])
                 if len(devices) == 1:
                     device = devices[0]
