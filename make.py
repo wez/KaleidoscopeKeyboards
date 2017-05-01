@@ -147,19 +147,18 @@ class keyboard(object):
                 else:
                     prefs[k] = v
 
+        home = os.environ['HOME']
         cmd = [
             os.path.join(arduino.prefs['runtime.ide.path'], 'arduino-builder'),
             mode,
-            '-hardware', '/Applications/Arduino.app/Contents/Java/hardware',
-            '-hardware', '/Users/wez/Library/Arduino15/packages',
-            '-tools', '/Applications/Arduino.app/Contents/Java/tools-builder',
-            '-tools', '/Applications/Arduino.app/Contents/Java/hardware/tools/avr',
-            '-tools', '/Users/wez/Library/Arduino15/packages',
+            '-hardware', os.path.join(arduino.prefs['runtime.ide.path'], 'hardware'),
+            '-hardware', '%s/Library/Arduino15/packages' % home,
+            '-tools', os.path.join(arduino.prefs['runtime.ide.path'], 'tools-builder'),
+            '-tools', os.path.join(arduino.prefs['runtime.ide.path'], 'hardware', 'tools', 'avr'),
+            '-tools', '%s/Library/Arduino15/packages' % home,
             '-fqbn', self.fqbn,
-            '-built-in-libraries', '/Applications/Arduino.app/Contents/Java/libraries',
-            '-libraries', '/Users/wez/Documents/Arduino/libraries',
+            '-built-in-libraries', os.path.join(arduino.prefs['runtime.ide.path'], 'libraries'),
             '-libraries', libs,
-            #'-hardware', boards,
             '-libraries', self.dir,
             '-build-path', self.make_dirs(),
             '-ide-version', arduino.prefs['runtime.ide.version'],
