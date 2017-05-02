@@ -54,7 +54,7 @@ const Key keymaps[][ROWS][COLS] PROGMEM = {
   CTL_T(Esc), Key_A, Key_S, Key_D, Key_F, Key_G, Key_Minus,
   Key_LShift,     Key_Z, Key_X, Key_C, Key_V, Key_B,
                                                     Key_LShift,
-                                         Key_Keymap2_Momentary, HYPER(___),
+                                         Key_Keymap2_Momentary, HYPER(Key_RCtrl),
                                          Key_Backspace,   Key_Delete,
 
   M(MPASTE),            Key_6, Key_7, Key_8,     Key_9,      Key_0,
