@@ -6,6 +6,12 @@
 #define COLS 16
 #define ROWS 4
 
+// This is just to satisfy a dependency of the Focus
+// extension interface.  It is not actually used.
+struct cRGB {
+  uint8_t r, g, b;
+};
+
 class Flutterby {
   public:
     void setup();
