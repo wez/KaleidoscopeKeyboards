@@ -4,6 +4,7 @@
 #include "Kaleidoscope.h"
 #include <Kaleidoscope-HostOS.h>
 #include <Kaleidoscope/HostOS-select.h>
+#include <avr/wdt.h>
 
 #define KEYMAP(                        \
     /* left hand */                    \

@@ -9,13 +9,7 @@ is the entry point for the overall keyboard firmware.
 
 ## Instructions
 
-* Clone this repo, the first time:
-
-```
-./make.py iota --sync
-```
-
-* Subsequent builds:
+* Build a keyboard:
 
 ```
 ./make.py iota

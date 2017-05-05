@@ -9,6 +9,7 @@ import shlex
 from glob import glob
 import time
 from pprint import pprint
+from urlparse import urlparse
 
 parser = argparse.ArgumentParser(description='''
     build keyboard firmware
@@ -124,6 +125,7 @@ class keyboard(object):
                  vid=None,
                  pid=None,
                  product=None,
+                 libs=None,
                  manufacturer=None):
         self.name = name
         self.fqbn = fqbn
@@ -131,14 +133,12 @@ class keyboard(object):
         self.pid = pid
         self.product = product
         self.manufacturer = manufacturer
+        self.libs = libs or []
 
     def set_dir(self, path):
         self.dir = path
 
     def _builder(self, mode, prefs=None, prefs_extend=None):
-        boards = os.path.join('keyboardio', 'Arduino-Boards')
-        libs = os.path.join(boards, 'libraries')
-
         if prefs_extend:
             base_prefs = self.parse_prefs()
 
@@ -159,7 +159,7 @@ class keyboard(object):
             '-tools', '%s/Library/Arduino15/packages' % home,
             '-fqbn', self.fqbn,
             '-built-in-libraries', os.path.join(arduino.prefs['runtime.ide.path'], 'libraries'),
-            '-libraries', libs,
+            '-libraries', '%s/externals' % self.dir,
             '-libraries', self.dir,
             '-build-path', self.make_dirs(),
             '-ide-version', arduino.prefs['runtime.ide.version'],
@@ -202,8 +202,56 @@ class keyboard(object):
                 print('malformed line: %s' % line)
         return prefs
 
+    def get_libs(self):
+        ''' ensure that we have each of the listed libs available '''
+
+        # externals is the shared directory holding the libs
+        externals = os.path.realpath('externals')
+        if not os.path.isdir(externals):
+            os.makedirs(externals)
+
+        # local externals is the local "mirror" of the shared directory.
+        # it is maintained separately so that we can trap missing deps
+        # in one of the projects
+        local_externals = os.path.join(self.dir, 'externals')
+        if not os.path.isdir(local_externals):
+            os.makedirs(local_externals)
+
+        # to be able to garbage collect removed deps, scan the local dir
+        # and remember the previous set of deps.  We'll remove any of
+        # these that aren't referenced below.
+        to_remove = set(os.listdir(local_externals))
+
+        for lib in self.libs:
+            url = urlparse(lib)
+            local_dir = os.path.join(externals, os.path.basename(url.path))
+            if not os.path.isdir(local_dir):
+                subprocess.check_call(['git', 'clone', '--depth', '1', lib, local_dir])
+            elif args.sync:
+                subprocess.check_call(['git', 'fetch', 'origin'], cwd=local_dir)
+                subprocess.check_call(['git', 'rebase', 'origin', 'master'], cwd=local_dir)
+
+            to_remove.discard(os.path.basename(url.path))
+            local_link = os.path.join(local_externals, os.path.basename(url.path))
+            if os.path.islink(local_link):
+                if os.readlink(local_link) == local_dir:
+                    continue
+                os.unlink(local_link)
+            elif os.path.exists(local_link):
+                print(('WARNING: %s exists and is not a symlink '
+                       'managed by the libs directive') % local_link)
+                continue
+
+            os.symlink(local_dir, local_link)
+
+        for lib in to_remove:
+            os.unlink(os.path.join(local_externals, lib))
+
+
     def build(self):
         build_path = self.make_dirs()
+
+        self.get_libs()
 
         prefs = self.parse_prefs()
 
