@@ -31,4 +31,7 @@ class OneKeyTeensy {
 
   private:
     wezkeeb::MatrixScanner<COLS, ROWS> scanner_;
+    TeensyEventDispatcher dispatcher_;
 };
+
+#define HARDWARE_EVENT_DISPATCHER 1

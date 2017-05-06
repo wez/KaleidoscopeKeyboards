@@ -31,6 +31,10 @@ class OneKeyBLE {
 
     BLEDis bledis;
     BLEHidAdafruit blehid;
+
   private:
     wezkeeb::MatrixScanner<COLS, ROWS> scanner_;
+    BluefruitEventDispatcher dispatcher_;
 };
+
+#define HARDWARE_EVENT_DISPATCHER 1
