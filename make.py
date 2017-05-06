@@ -228,6 +228,7 @@ class keyboard(object):
             if not os.path.isdir(local_dir):
                 subprocess.check_call(['git', 'clone', '--depth', '1', lib, local_dir])
             elif args.sync:
+                print('Updating %s' % local_dir)
                 subprocess.check_call(['git', 'fetch', 'origin'], cwd=local_dir)
                 subprocess.check_call(['git', 'rebase', 'origin', 'master'], cwd=local_dir)
 
@@ -395,10 +396,6 @@ def load_keyboard(name):
 
 kbd = load_keyboard(args.keyboard)
 kbd.set_dir(os.path.realpath(args.keyboard))
-
-if args.sync:
-    subprocess.check_call(['git', 'submodule', 'sync', '--recursive'])
-    subprocess.check_call(['git', 'submodule', 'update', '--init', '--recursive'])
 
 if args.clean:
     kbd.clean()
