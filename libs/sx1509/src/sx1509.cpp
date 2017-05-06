@@ -17,6 +17,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "sx1509.h"
 #include <Wire.h>
 
+namespace wezkeeb {
+
 // Controls the SX1509 16 pin I/O expander
 
 #define i2cAddress 0x3e // Configurable with jumpers
@@ -65,4 +67,6 @@ uint16_t SX1509::read() {
   auto b = Wire.read();
 
   return a << 8 | b;
+}
+
 }

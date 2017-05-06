@@ -1,5 +1,7 @@
 #include "mcp23017.h"
 
+namespace wezkeeb {
+
 #define i2cAddress 0x27 // Configurable with jumpers
 
 enum mcp23017_registers {
@@ -65,4 +67,6 @@ uint16_t MCP23017::read() {
   auto b = Wire.read();
 
   return a << 8 | b;
+}
+
 }

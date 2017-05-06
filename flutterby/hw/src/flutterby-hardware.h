@@ -19,7 +19,7 @@ class Flutterby {
     void act_on_matrix_scan();
 
   private:
-    SX1509 expander_;
+    wezkeeb::SX1509 expander_;
     uint16_t matrix_[ROWS];
     uint16_t priorMatrix_[ROWS];
 };
