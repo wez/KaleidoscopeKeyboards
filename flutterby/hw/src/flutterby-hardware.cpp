@@ -27,55 +27,23 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 // col0-15:   sx1509
 static const uint8_t row_pins[ROWS] = {20, 21, 22, 23};
 
-static inline void selectRow(uint8_t row) {
-  uint8_t pin = row_pins[row];
-
-  pinMode(pin, OUTPUT);
-  digitalWrite(pin, LOW);
-}
-
-static inline void unSelectRow(uint8_t row) {
-  uint8_t pin = row_pins[row];
-
-  digitalWrite(pin, HIGH);
-  pinMode(pin, INPUT);
-}
-
-static void unSelectAllRows(void) {
-  for (uint8_t x = 0; x < ROWS; x++) {
-    unSelectRow(x);
-  }
-}
+Flutterby::Flutterby() : scanner_(row_pins) {}
 
 void Flutterby::setup() {
-  memset(matrix_, 0, sizeof(matrix_));
-  memset(priorMatrix_, 0, sizeof(priorMatrix_));
-  unSelectAllRows();
-  expander_.begin();
+  scanner_.begin();
   Serial.begin(9600);
 }
 
 void Flutterby::scan_matrix() {
-  memcpy(priorMatrix_, matrix_, sizeof(matrix_));
-
-  for (uint8_t row = 0; row < ROWS; ++row) {
-    selectRow(row);
-    delayMicroseconds(30);
-
-    // Note: 0 means pressed in the expander bits,
-    // so invert that for more rational use.
-    matrix_[row] = ~expander_.read();
-    unSelectRow(row);
-  }
-
+  scanner_.scanMatrix();
   act_on_matrix_scan();
 }
 
 void Flutterby::act_on_matrix_scan() {
   for (uint8_t row = 0; row < ROWS; ++row) {
     for (uint8_t col = 0; col < COLS; ++col) {
-      uint8_t state = (bitRead(priorMatrix_[row], col) ? WAS_PRESSED : 0) |
-                      (bitRead(matrix_[row], col) ? IS_PRESSED : 0);
+      uint8_t state = (bitRead(scanner_.prior()[row], col) ? WAS_PRESSED : 0) |
+                      (bitRead(scanner_.rows()[row], col) ? IS_PRESSED : 0);
 
       handle_keyswitch_event(Key_NoKey, row, col, state);
     }

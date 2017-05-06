@@ -1,3 +1,19 @@
+/*
+Copyright 2017 Wez Furlong
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 2 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see <http://www.gnu.org/licenses/>.
+*/
 #include "iota-hardware.h"
 #include "key_events.h"
 
@@ -11,54 +27,22 @@
 // col8-14: mcp23107 GPIOB1-7 (note that B0 is unused)
 static const uint8_t row_pins[ROWS] = {18, 19, 20, 21, 22};
 
-static inline void selectRow(uint8_t row) {
-  uint8_t pin = row_pins[row];
-
-  pinMode(pin, OUTPUT);
-  digitalWrite(pin, LOW);
-}
-
-static inline void unSelectRow(uint8_t row) {
-  uint8_t pin = row_pins[row];
-
-  digitalWrite(pin, HIGH);
-  pinMode(pin, INPUT);
-}
-
-static void unSelectAllRows(void) {
-  for (uint8_t x = 0; x < ROWS; x++) {
-    unSelectRow(x);
-  }
-}
+Iota::Iota() : scanner_(row_pins) {}
 
 void Iota::setup() {
-  memset(matrix_, 0, sizeof(matrix_));
-  memset(priorMatrix_, 0, sizeof(priorMatrix_));
-  unSelectAllRows();
-  expander_.init();
+  scanner_.begin();
 }
 
 void Iota::scan_matrix() {
-  memcpy(priorMatrix_, matrix_, sizeof(matrix_));
-
-  for (uint8_t row = 0; row < ROWS; ++row) {
-    selectRow(row);
-    delayMicroseconds(30);
-
-    // Note: 0 means pressed in the expander bits,
-    // so invert that for more rational use.
-    matrix_[row] = ~expander_.read();
-    unSelectRow(row);
-  }
-
+  scanner_.scanMatrix();
   act_on_matrix_scan();
 }
 
 void Iota::act_on_matrix_scan() {
   for (uint8_t row = 0; row < ROWS; ++row) {
     for (uint8_t col = 0; col < COLS; ++col) {
-      uint8_t state = (bitRead(priorMatrix_[row], col) ? WAS_PRESSED : 0) |
-                      (bitRead(matrix_[row], col) ? IS_PRESSED : 0);
+      uint8_t state = (bitRead(scanner_.prior()[row], col) ? WAS_PRESSED : 0) |
+                      (bitRead(scanner_.rows()[row], col) ? IS_PRESSED : 0);
       handle_keyswitch_event(Key_NoKey, row, col, state);
     }
   }
