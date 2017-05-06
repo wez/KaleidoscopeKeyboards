@@ -159,6 +159,7 @@ class keyboard(object):
             '-tools', '%s/Library/Arduino15/packages' % home,
             '-fqbn', self.fqbn,
             '-built-in-libraries', os.path.join(arduino.prefs['runtime.ide.path'], 'libraries'),
+            '-libraries', os.path.realpath('libs'),
             '-libraries', '%s/externals' % self.dir,
             '-libraries', self.dir,
             '-build-path', self.make_dirs(),
