@@ -22,6 +22,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 class TeensyEventDispatcher : public EventDispatcher {
 public:
+  TeensyEventDispatcher() : EventDispatcher() {}
   void begin() override;
   void queryConnectionTypes(uint8_t &connectionMask) override;
   void consumerPress(uint8_t connectionMask, uint8_t keyCode) override;
