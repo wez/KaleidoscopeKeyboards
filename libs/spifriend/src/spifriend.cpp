@@ -130,9 +130,13 @@ SPIFriend::SdepMsg::SdepMsg() {
 SPIFriend::SPIFriend(int8_t csPin, int8_t irqPin, int8_t rstPin,
                      int8_t powerPin)
     : spi_(4000000, MSBFIRST, SPI_MODE0), csPin_(csPin), irqPin_(irqPin),
-      rstPin_(rstPin), powerPin_(powerPin), state_(NotInit) {}
+      rstPin_(rstPin), powerPin_(powerPin), state_(Disabled) {}
 
 void SPIFriend::begin() {
+  if (state_ != Disabled) {
+    return;
+  }
+
   SPI.begin();
 
   pinMode(csPin_, OUTPUT);
@@ -152,13 +156,24 @@ void SPIFriend::begin() {
   }
 #endif
 
+  state_ = NotInit;
   tick();
+}
+
+void SPIFriend::end() {
+  if (powerPin_ != -1) {
+    digitalWrite(powerPin_, LOW);
+  }
+
+  state_ = Disabled;
 }
 
 void SPIFriend::tick() {
   char resbuf[128];
 
   switch (state_) {
+  case Disabled:
+    return;
   case NotInit:
     if (rstPin_ != -1) {
       // hardware reset

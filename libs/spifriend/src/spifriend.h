@@ -42,6 +42,7 @@ class SPIFriend {
     Configured,
     Connecting,
     Connected,
+    Disabled,
   } state_;
   uint16_t lastStateTime_;
 
