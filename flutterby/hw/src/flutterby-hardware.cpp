@@ -27,14 +27,21 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 // col0-15:   sx1509
 static const uint8_t row_pins[ROWS] = {20, 21, 22, 23};
 
-Flutterby::Flutterby() : scanner_(row_pins) {}
+#define SPIFRIEND_CS_PIN 1    // D3
+#define SPIFRIEND_IRQ_PIN 5   // C6
+#define SPIFRIEND_POWER_PIN 0 // D2
+Flutterby::Flutterby()
+    : spifriend_(SPIFRIEND_CS_PIN, SPIFRIEND_IRQ_PIN, -1, SPIFRIEND_POWER_PIN),
+      scanner_(row_pins), BLEdispatcher_(spifriend_) {}
 
 void Flutterby::setup() {
   scanner_.begin();
+  spifriend_.begin();
   Serial.begin(9600);
 }
 
 void Flutterby::scan_matrix() {
+  spifriend_.tick();
   scanner_.scanMatrix();
   act_on_matrix_scan();
 }

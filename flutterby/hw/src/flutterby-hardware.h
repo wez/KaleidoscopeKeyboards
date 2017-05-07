@@ -19,6 +19,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #define HARDWARE_IMPLEMENTATION Flutterby
 #include "sx1509.h"
 #include "matrix-scanner.h"
+#include "HIDEventDispatcher.h"
+#include "SPIFriendKeyboard.h"
 
 #define COLS 16
 #define ROWS 4
@@ -30,6 +32,12 @@ class Flutterby {
     void act_on_matrix_scan();
     Flutterby();
 
+    wezkeeb::SPIFriend spifriend_;
+
   private:
     wezkeeb::MatrixScannerWithExpander<COLS, ROWS, wezkeeb::SX1509> scanner_;
+    //HIDEventDispatcher dispatcher_;
+    SPIFriendEventDispatcher BLEdispatcher_;
 };
+
+#define HARDWARE_EVENT_DISPATCHER 1
