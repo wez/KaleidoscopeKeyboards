@@ -38,7 +38,7 @@ class Flutterby {
   private:
     wezkeeb::power::LowPowerMode basePowerMode_;
     wezkeeb::MatrixScannerWithExpander<COLS, ROWS, wezkeeb::SX1509> scanner_;
-    //HIDEventDispatcher dispatcher_;
+    HIDEventDispatcher USBdispatcher_;
     SPIFriendEventDispatcher BLEdispatcher_;
 
     void lowPowerMode();

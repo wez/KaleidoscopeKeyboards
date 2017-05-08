@@ -137,6 +137,7 @@ public:
   bool isConnected();
 
   bool keyReport(uint8_t modifiers, uint8_t (&report)[6]);
+  void blueLED(bool enable);
 };
 
 }

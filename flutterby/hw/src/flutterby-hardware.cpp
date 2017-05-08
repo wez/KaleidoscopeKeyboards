@@ -29,8 +29,8 @@ static const uint8_t row_pins[ROWS] = {20, 21, 22, 23};
 
 using wezkeeb::power::Subsystems;
 
-//#define PowerOffInterval 600000UL // 10 minutes
-#define PowerOffInterval 60000UL // 1 minute
+#define PowerOffInterval 600000UL // 10 minutes
+//#define PowerOffInterval 60000UL // 1 minute
 #define LowPowerInterval 10000 // 10 seconds
 #define SPIFRIEND_CS_PIN 1    // D3
 #define SPIFRIEND_IRQ_PIN 5   // C6

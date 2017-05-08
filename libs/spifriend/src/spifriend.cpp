@@ -277,7 +277,11 @@ void SPIFriend::setConnected(bool connected) {
   println(connected ? F("-> Connected ") : F("-> Connecting"));
 
   // Disable the blue LED; it's very bright
-  atCommand(F("AT+HWGPIO=19,0"));
+  blueLED(false);
+}
+
+void SPIFriend::blueLED(bool enable) {
+  atCommand(enable ? F("AT+HWGPIO=19,1") : F("AT+HWGPIO=19,0"));
 }
 
 bool SPIFriend::isConnected() {

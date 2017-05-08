@@ -9,7 +9,9 @@ void SPIFriendEventDispatcher::begin() {
 
 void SPIFriendEventDispatcher::queryConnectionTypes(
     uint8_t &connectionMask) {
-  connectionMask |= Ble;
+  if (spifriend_.isConnected()) {
+    connectionMask |= Ble;
+  }
 }
 
 void SPIFriendEventDispatcher::consumerPress(uint8_t connectionMask,
