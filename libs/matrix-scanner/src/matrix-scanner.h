@@ -56,6 +56,8 @@ public:
       digitalWrite(pin, HIGH);
       pinMode(pin, INPUT_PULLUP);
     }
+
+    lastChangeTime_ = millis();
   }
 
   inline void selectRow(uint8_t row) {
@@ -77,9 +79,16 @@ public:
     }
   }
 
+  void selectAllRows() {
+    for (uint8_t row = 0; row < NumRows; row++) {
+      selectRow(row);
+    }
+  }
+
   void scanMatrix() {
     memcpy(prior_, rows_, sizeof(prior_));
     memset(rows_, 0, sizeof(rows_));
+    bool changed = false;
 
     for (uint8_t row = 0; row < NumRows; row++) {
       selectRow(row);
@@ -89,18 +98,39 @@ public:
           bitWrite(rows_[row], col, 1);
         }
       }
+      if (prior_[row] != rows_[row]) {
+        changed = true;
+      }
       unSelectRow(row);
     }
+
+    if (changed) {
+      lastChangeTime_ = millis();
+    }
+  }
+
+  bool isAnyKeyPressed() {
+    selectAllRows();
+    delayMicroseconds(30);
+    for (uint8_t col = 0; col < NumCols; col++) {
+      if (digitalRead(colPins_[col]) == LOW) {
+        return true;
+      }
+    }
+    return false;
   }
 
   const matrix_t &rows() const { return rows_; }
   const matrix_t &prior() const { return prior_; }
+  uint16_t lastChange() const { return lastChangeTime_; }
+  uint16_t timeSinceLastChange() const { return millis() - lastChangeTime_; }
 
 protected:
   const uint8_t (&rowPins_)[NumRows];
   const uint8_t (&colPins_)[NumCols];
   matrix_t rows_;
   matrix_t prior_;
+  uint16_t lastChangeTime_;
 };
 
 /** This variant of a matrix scanner uses an IO Expander to
@@ -124,6 +154,7 @@ public:
     memset(prior_, 0, sizeof(prior_));
     unSelectAllRows();
     expander_.begin();
+    lastChangeTime_ = millis();
   }
 
   inline void selectRow(uint8_t row) {
@@ -145,9 +176,16 @@ public:
     }
   }
 
+  void selectAllRows() {
+    for (uint8_t row = 0; row < NumRows; row++) {
+      selectRow(row);
+    }
+  }
+
   void scanMatrix() {
     memcpy(prior_, rows_, sizeof(prior_));
     memset(rows_, 0, sizeof(rows_));
+    bool changed = false;
 
     for (uint8_t row = 0; row < NumRows; row++) {
       selectRow(row);
@@ -156,19 +194,34 @@ public:
       // Note: 0 means pressed in the expander bits,
       // so invert that for more rational use.
       rows_[row] = ~expander_.read();
-
+      if (prior_[row] != rows_[row]) {
+        changed = true;
+      }
       unSelectRow(row);
     }
+
+    if (changed) {
+      lastChangeTime_ = millis();
+    }
+  }
+
+  bool isAnyKeyPressed() {
+    selectAllRows();
+    delayMicroseconds(30);
+    return expander_.read() != 0xffff;
   }
 
   const matrix_t &rows() const { return rows_; }
   const matrix_t &prior() const { return prior_; }
+  uint16_t lastChange() const { return lastChangeTime_; }
+  uint16_t timeSinceLastChange() const { return millis() - lastChangeTime_; }
 
 protected:
   const uint8_t (&rowPins_)[NumRows];
   matrix_t rows_;
   matrix_t prior_;
   Expander expander_;
+  uint16_t lastChangeTime_;
 };
 
 

@@ -21,6 +21,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "matrix-scanner.h"
 #include "HIDEventDispatcher.h"
 #include "SPIFriendKeyboard.h"
+#include "powermgr.h"
 
 #define COLS 16
 #define ROWS 4
@@ -35,9 +36,12 @@ class Flutterby {
     wezkeeb::SPIFriend spifriend_;
 
   private:
+    wezkeeb::power::LowPowerMode basePowerMode_;
     wezkeeb::MatrixScannerWithExpander<COLS, ROWS, wezkeeb::SX1509> scanner_;
     //HIDEventDispatcher dispatcher_;
     SPIFriendEventDispatcher BLEdispatcher_;
+
+    void lowPowerMode();
 };
 
 #define HARDWARE_EVENT_DISPATCHER 1
